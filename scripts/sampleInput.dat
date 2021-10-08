@@ -1,0 +1,17 @@
+ligand = {
+    topology = dodecane.top 
+    gro      = dodecane.gro
+}
+
+#Nanoparticle = {
+#
+#}
+
+Shape = {
+    type = sphere
+    radius = 2
+}
+
+#output = {
+#}
+
