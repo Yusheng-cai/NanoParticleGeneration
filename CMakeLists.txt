@@ -32,4 +32,5 @@ add_executable(NP_gen main.cpp basic_struct_operations.cpp load_residue.cpp plac
 
 add_subdirectory(tools)
 
+target_link_libraries(NP_gen PUBLIC NPtools)
 target_include_directories(NP_gen PUBLIC ${CMAKE_SOURCE_DIR})
