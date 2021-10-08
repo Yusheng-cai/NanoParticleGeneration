@@ -1,4 +1,5 @@
-#include "basic_structs.h";
+#include "basic_structs.h"
+
 Atom::Atom(std::string iname, float xi, float yi, float zi)
 {
 	name = iname;
