@@ -510,79 +510,75 @@ void build_nanoparticle(std::vector<Atom> gnp_atoms, std::vector<Atom> sulfurs, 
 	return;
 }
 
-
-
 int main(int argc, char **argv)
 {
 	// the input name
-	std::string fname = "input.dat";
+	std::string fname = argv[1];
+	InputParser parser;
 
-	//for auto-generated nanoparticle
-	bool generate_np = 0;
-	bool np_file_specified = 0;
-	std::string np_shape;
-	float params[2];
-	//for manually-specified nanoparticle
-	std::string np_filename = "";
-	int np_assigned = 0;
+	ParameterPack pack_;
+	parser.ParseFile(fname, pack_);
+
+	auto ligandPack = pack_.findParamPack("ligand", ParameterPack::KeyType::Required);
+	auto NPPack		= pack_.findParamPack("Nanoparticle", ParameterPack::KeyType::Optional);
+	auto ShapePack  = pack_.findParamPack("Shape", ParameterPack::KeyType::Optional);
+	auto OutPack 	= pack_.findParamPack("output", ParameterPack::KeyType::Optional);
+
 	//for ligand
 	std::string ligand_top = "";
 	std::string ligand_gro = "";
-	std::string output_name = "out";
-	
-	float e = 50.0; //kJ/mol
-	for(int i = 0; i < argc; i++)
+	ligandPack->ReadString("topology", ParameterPack::KeyType::Required, ligand_top);
+	ligandPack->ReadNumber("gro", ParameterPack::KeyType::Required, ligand_gro);
+
+	//for manually-specified nanoparticle
+	std::string np_filename = "";
+	int np_assigned = 0;
+	if (NPPack != nullptr)
 	{
-		std::string input = argv[i];
-		if(input == "-h")
+		np_assigned = 1;
+		NPPack -> ReadString("name", ParameterPack::KeyType::Required, np_filename);
+	}
+
+	//for shape
+	std::string np_shape;
+	float params[2];
+	//for auto-generated nanoparticle
+	bool generate_np = 0;
+	bool np_file_specified = 0;
+
+	if (ShapePack != nullptr)
+	{
+		generate_np = 1;
+
+		ShapePack -> ReadString("type", ParameterPack::KeyType::Required, np_shape);
+
+		if (np_shape =="sphere")
 		{
-			std::cout << 
-			"Arguments: \n -lig <ligand top file> <ligand gro file> (ligand inputs) \n -generate <sphere/cylinder> (create sphere/cylinder using algorithm) \n -np <nanoparticle gro file> (manually specify gro file of AU atoms for NP surface)\n -o <output name> (default is out)\n -e cut-off energy (kJ/mol)\n";
-			return 0;
+			float radius;
+			ShapePack -> ReadNumber("radius", ParameterPack::KeyType::Required, radius);
+
+			params[0] = radius;
 		}
-		if(input == "-generate")
+
+		if (np_shape=="cylinder")
 		{
-			generate_np = 1;
-			np_shape = argv[++i];
-			if(i >= argc) break;
-			if(np_shape == "sphere"){
-				std::cout << "Specify radius in nm." << std::endl;
-				std::cin >> params[0];				
-			}
-			else if(np_shape == "cylinder"){
-				std::cout << "Specify radius in nm." << std::endl;
-				std::cin >> params[0];
-				std::cout << "Specify thickness in nm." << std::endl;
-				std::cin >> params[1];
-			}
-			else{
-				std::cout << "Invalid shape specified. Please choose from sphere or cylinder." << std::endl;
-			}
+			float radius;
+			float length;
+			ShapePack -> ReadNumber("radius", ParameterPack::KeyType::Required, radius);
+			ShapePack -> ReadNumber("length", ParameterPack::KeyType::Required, length);
+
+			params[0] = radius;
+			params[1] = length;
 		}
-		if(input == "-lig"){
-			ligand_top = argv[++i];
-			ligand_gro = argv[++i];
-			if(i >= argc) break;
-		}
-		if(input == "-np"){
-			np_filename = argv[++i];
-			np_assigned = 1;
-			if(i >= argc) break;
-		}
-		if(input == "-nps"){
-			np_filename = argv[++i];
-			np_assigned = 2;
-			if(i >= argc) break;
-		}
-		if(input == "-o")
-		{
-			output_name = argv[++i];
-			if(i >= argc) break;
-		}
-		if(input == "-e")
-		{
-			e = std::stof(argv[++i]);
-		}
+	}
+
+	// read output things
+	std::string output_name = "out";
+	float e = 50.0; //kJ/mol
+	if (OutPack != nullptr)
+	{
+		OutPack -> ReadNumber("energy", ParameterPack::KeyType::Optional,e);
+		OutPack -> ReadString("name", ParameterPack::KeyType::Optional, output_name);
 	}
 	
 	std::vector<Atom> atoms;

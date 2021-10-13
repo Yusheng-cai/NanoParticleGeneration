@@ -3,3 +3,5 @@ RELEASE/
 DEBUG/
 
 *.out
+build.sh
+.DS_Store
